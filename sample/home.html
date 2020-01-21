@@ -9,54 +9,71 @@
 
 <body>
 
-    <video id="mse" muted width="1080" height="720"></video>
+    <video id="mse1" muted width="1080" height="720"></video>
+    <video id="mse2" muted width="1080" height="720"></video>
+    <video id="mse3" muted width="1080" height="720"></video>
 
     <script>
-        var mime = 'video/mp4; codecs="avc1.64001E"';
-        var buffer;
-        var socket;
-        var video = document.getElementById('mse');
-        var mediaSource = new MediaSource();
-        video.src = URL.createObjectURL(mediaSource);
-        video.play();
+        // stream
+        class ready {
+            constructor(videoId) {
+                this.socket = io(null, {
+                    transports: ['websocket']
+                });
+                this.video = document.getElementById(videoId);
+                this.config = {
+                    channelid: String(i),
+                    channelname: '畫面一',
+                    url: 'rtsp://192.168.1.9:554/user=admin&password=999&channel=' + String(i) + '&stream=1'
+                };
+            }
+            stop() {
+                this.socket.emit('close', '');
+            }
 
-        mediaSource.addEventListener('sourceended', function (e) {
-            console.log('sourceended: ' + mediaSource.readyState);
-        });
-        mediaSource.addEventListener('sourceclose', function (e) {
-            console.log('sourceclose: ' + mediaSource.readyState);
-        });
-        mediaSource.addEventListener('error', function (e) {
-            console.log('error: ' + mediaSource.readyState);
-        });
-        mediaSource.addEventListener('sourceopen', function (e) {
-            buffer = mediaSource.addSourceBuffer(mime);
-            buffer.mode = 'sequence';
-            buffer.addEventListener('updateend', function (e) {
-                //hack to get safari on mac to start playing, video.currentTime gets stuck on 0
-                if (mediaSource.duration !== Number.POSITIVE_INFINITY && video.currentTime === 0 &&
-                    mediaSource.duration > 0) {
-                    video.currentTime = mediaSource.duration - 1;
-                    mediaSource.duration = Number.POSITIVE_INFINITY;
-                }
-            });
+            run() {
+                var mime = 'video/mp4; codecs="avc1.64001E"';
+                var buffer;
+                var mediaSource = new MediaSource();
+                this.video.src = URL.createObjectURL(mediaSource);
+                this.video.play();
 
-            socket = io(null, {
-                transports: ['websocket']
-            });
+                mediaSource.addEventListener('sourceended', function(e) {
+                    console.log('sourceended: ' + mediaSource.readyState);
+                });
+                mediaSource.addEventListener('sourceclose', function(e) {
+                    console.log('sourceclose: ' + mediaSource.readyState);
+                });
+                mediaSource.addEventListener('error', function(e) {
+                    console.log('error: ' + mediaSource.readyState);
+                });
+                var that = this;
+                mediaSource.addEventListener('sourceopen', function(e) {
+                    buffer = mediaSource.addSourceBuffer(mime);
+                    buffer.mode = 'sequence';
+                    buffer.addEventListener('updateend', function(e) {
+                        //hack to get safari on mac to start playing, video.currentTime gets stuck on 0
+                        if (mediaSource.duration !== Number.POSITIVE_INFINITY && video.currentTime === 0 &&
+                            mediaSource.duration > 0) {
+                            that.video.currentTime = mediaSource.duration - 1;
+                            mediaSource.duration = Number.POSITIVE_INFINITY;
+                        }
+                    });
 
-            var config = {
-                channelid: '1',
-                channelname: '畫面一',
-                url: 'rtsp://192.168.1.9:554/user=admin&password=999&channel=1&stream=1'
-            };
-            socket.emit('start', JSON.stringify(config));
+                    that.socket.emit('start', JSON.stringify(that.config));
 
-            socket.on('segment', function (data) {
-                var data = new Uint8Array(data);
-                buffer.appendBuffer(data);
-            });
-        }, false);
+                    that.socket.on('segment', function(data) {
+                        var data = new Uint8Array(data);
+                        buffer.appendBuffer(data);
+                    });
+                }, false);
+            }
+        }
+        // start 3 CCTV
+        for (var i = 1; i <= 3; i++) {
+            stream = new ready("mse" + String(i));
+            stream.run();
+        }
     </script>
 </body>
 
