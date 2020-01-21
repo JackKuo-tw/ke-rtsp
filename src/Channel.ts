@@ -33,7 +33,7 @@ export class Channel {
     }
     private i: number = 0;
     private broadcast(data: any): void {
-        console.log(++this.i);
+        // console.log(++this.i);
         for (let client of this.clients) {
             if ((client as any).initSegment) client.emit('segment', data);
         }

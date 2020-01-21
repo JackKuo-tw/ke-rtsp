@@ -29,7 +29,7 @@ var Channel = /** @class */ (function () {
         this._ffmpeg.stdio[1].pipe(this._mp4Frag);
     };
     Channel.prototype.broadcast = function (data) {
-        console.log(++this.i);
+        // console.log(++this.i);
         for (var _i = 0, _a = this.clients; _i < _a.length; _i++) {
             var client = _a[_i];
             if (client.initSegment)

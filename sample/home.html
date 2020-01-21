@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>HTML5视频直播测试</title>
+    <title>監視器畫面</title>
     <script src="/socket.io/socket.io.js"></script>
 </head>
 
@@ -47,8 +47,8 @@
 
             var config = {
                 channelid: '1',
-                channelname: '测试摄像头',
-                url: 'rtsp://admin:admin888@192.168.1.64:554/h264/ch1/main/av_stream'
+                channelname: '畫面一',
+                url: 'rtsp://192.168.1.9:554/user=admin&password=999&channel=1&stream=1'
             };
             socket.emit('start', JSON.stringify(config));
 
